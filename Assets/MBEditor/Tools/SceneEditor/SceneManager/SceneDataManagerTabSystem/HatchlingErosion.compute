@@ -1,0 +1,199 @@
+// Hatchling's Erosion Algorithm - Compute Shader
+// Based on: https://www.proceduralpixels.com/blog/terrain-hack-fastest-erosion-algorithm-ever
+// Original discovery by Hatchling (Shadertoy)
+//
+// This algorithm uses layered slab functions to approximate hydraulic erosion.
+// It's not physically accurate but produces believable results very quickly.
+
+#pragma kernel CSErosion
+#pragma kernel CSErosionMultiPass
+
+// Input/Output
+RWTexture2D<float> HeightmapRW;     // Read-write heightmap (for in-place operations)
+Texture2D<float> HeightmapIn;       // Input heightmap (read-only)
+RWTexture2D<float> HeightmapOut;    // Output heightmap
+
+SamplerState samplerHeightmapIn;
+
+// Parameters
+int Resolution;                      // Heightmap resolution
+int KernelSize;                      // Search window size (radius in pixels)
+int LayersCount;                     // Number of threshold layers
+float MinHeight;                     // Minimum terrain height
+float MaxHeight;                     // Maximum terrain height
+float ErosionStrength;               // Blend factor (0-1) for erosion effect
+float2 TexelSize;                    // 1.0 / Resolution
+
+// Advanced parameters
+int UseVariableKernel;               // Whether to vary kernel size by height
+float KernelMinScale;                // Minimum kernel scale at low heights
+float KernelMaxScale;                // Maximum kernel scale at high heights
+
+// Linearstep function (HLSL equivalent of GLSL smoothstep edges)
+float linearstep(float edge0, float edge1, float x)
+{
+    return saturate((x - edge0) / (edge1 - edge0));
+}
+
+// Get slab function value for a single threshold
+// Returns a value representing how the terrain should be "sliced" at this height
+float GetSlabFunction(float2 uv, float threshold, int kernelRadius)
+{
+    float minDistToPositive = 9999.0;
+    float minDistToNegative = 9999.0;
+    
+    // Traverse the 2D search window
+    [loop]
+    for (int x = -kernelRadius; x <= kernelRadius; x++)
+    {
+        [loop]
+        for (int y = -kernelRadius; y <= kernelRadius; y++)
+        {
+            float2 offset = float2(x, y) * TexelSize;
+            float2 sampleUV = uv + offset;
+            
+            // Sample height at offset position
+            float sampledHeight = HeightmapIn.SampleLevel(samplerHeightmapIn, sampleUV, 0).r;
+            float dist = length(offset);
+            
+            // Update distances to threshold crossings
+            if (sampledHeight > threshold)
+            {
+                minDistToPositive = min(minDistToPositive, dist);
+            }
+            else
+            {
+                minDistToNegative = min(minDistToNegative, dist);
+            }
+        }
+    }
+    
+    // Convert distance difference to clamped linear function
+    float maxDist = kernelRadius * TexelSize.x;
+    return linearstep(maxDist, -maxDist, minDistToPositive - minDistToNegative);
+}
+
+// Get slab function with direct texture reads (for RW texture)
+float GetSlabFunctionRW(int2 centerPixel, float threshold, int kernelRadius)
+{
+    float minDistToPositive = 9999.0;
+    float minDistToNegative = 9999.0;
+    
+    [loop]
+    for (int x = -kernelRadius; x <= kernelRadius; x++)
+    {
+        [loop]
+        for (int y = -kernelRadius; y <= kernelRadius; y++)
+        {
+            int2 samplePixel = centerPixel + int2(x, y);
+            
+            // Clamp to texture bounds
+            samplePixel = clamp(samplePixel, int2(0, 0), int2(Resolution - 1, Resolution - 1));
+            
+            float sampledHeight = HeightmapRW[samplePixel];
+            float2 offset = float2(x, y) * TexelSize;
+            float dist = length(offset);
+            
+            if (sampledHeight > threshold)
+            {
+                minDistToPositive = min(minDistToPositive, dist);
+            }
+            else
+            {
+                minDistToNegative = min(minDistToNegative, dist);
+            }
+        }
+    }
+    
+    float maxDist = kernelRadius * TexelSize.x;
+    return linearstep(maxDist, -maxDist, minDistToPositive - minDistToNegative);
+}
+
+// Calculate adaptive kernel size based on height
+int GetAdaptiveKernelSize(float normalizedHeight)
+{
+    if (UseVariableKernel == 0)
+        return KernelSize;
+    
+    // Scale kernel size based on height - larger kernels at higher elevations
+    // This creates more erosion at peaks and less in valleys
+    float scale = lerp(KernelMinScale, KernelMaxScale, normalizedHeight);
+    return max(1, (int)(KernelSize * scale));
+}
+
+// Main erosion kernel - processes entire heightmap
+[numthreads(8, 8, 1)]
+void CSErosion(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)Resolution || id.y >= (uint)Resolution)
+        return;
+    
+    float2 uv = (float2(id.xy) + 0.5) / float(Resolution);
+    
+    // Get original height for adaptive kernel
+    float originalHeight = HeightmapIn.SampleLevel(samplerHeightmapIn, uv, 0).r;
+    float normalizedOriginal = (originalHeight - MinHeight) / max(0.001, MaxHeight - MinHeight);
+    
+    // Calculate adaptive kernel size
+    int adaptiveKernel = GetAdaptiveKernelSize(normalizedOriginal);
+    
+    // Accumulate slab functions across all threshold layers
+    float heightSum = 0.0;
+    
+    [loop]
+    for (int i = 0; i < LayersCount; i++)
+    {
+        // Each layer uses a different threshold between min and max height
+        float t = (float)i / max(1.0, (float)(LayersCount - 1));
+        float threshold = lerp(MinHeight, MaxHeight, t);
+        
+        heightSum += GetSlabFunction(uv, threshold, adaptiveKernel);
+    }
+    
+    // Normalize accumulated height and remap to terrain range
+    heightSum /= max(1.0, (float)LayersCount);
+    float erodedHeight = lerp(MinHeight, MaxHeight, heightSum);
+    
+    // Blend between original and eroded based on strength
+    float finalHeight = lerp(originalHeight, erodedHeight, ErosionStrength);
+    
+    HeightmapOut[id.xy] = finalHeight;
+}
+
+// Multi-pass erosion for iterative refinement
+// Uses RW texture for in-place updates
+[numthreads(8, 8, 1)]
+void CSErosionMultiPass(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= (uint)Resolution || id.y >= (uint)Resolution)
+        return;
+    
+    int2 pixel = int2(id.xy);
+    
+    // Get original height for adaptive kernel
+    float originalHeight = HeightmapRW[pixel];
+    float normalizedOriginal = (originalHeight - MinHeight) / max(0.001, MaxHeight - MinHeight);
+    
+    // Calculate adaptive kernel size
+    int adaptiveKernel = GetAdaptiveKernelSize(normalizedOriginal);
+    
+    // Accumulate slab functions
+    float heightSum = 0.0;
+    
+    [loop]
+    for (int i = 0; i < LayersCount; i++)
+    {
+        float t = (float)i / max(1.0, (float)(LayersCount - 1));
+        float threshold = lerp(MinHeight, MaxHeight, t);
+        
+        heightSum += GetSlabFunctionRW(pixel, threshold, adaptiveKernel);
+    }
+    
+    heightSum /= max(1.0, (float)LayersCount);
+    float erodedHeight = lerp(MinHeight, MaxHeight, heightSum);
+    
+    // Blend with original
+    float finalHeight = lerp(originalHeight, erodedHeight, ErosionStrength);
+    
+    HeightmapRW[pixel] = finalHeight;
+}

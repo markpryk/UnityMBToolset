@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f2d3152d10592324eab5ed883d50f86e, type: 3}
+  m_Name: ImporterBuildData
+  m_EditorClassIdentifier: 
+  _entryPointPrefab: {fileID: 7988905704645725837, guid: aa2c0fe709ee3aa40a04747c62c0f65a, type: 3}
+  _passagePrefab: {fileID: 1360294077784279389, guid: 2363b76a95815ae49a785175ac938ea5, type: 3}
+  _terrainBaseMaterial: {fileID: 2100000, guid: 7715b6ae4eadc80459dfd5a68b90d183, type: 2}
+  _foundedMaterial: {fileID: 2100000, guid: 21362f3b4c8282947bfa587144b1ce2b, type: 2}
+  _missingMaterial: {fileID: 2100000, guid: 249b4513e47a1dc42989e033d3911802, type: 2}
+  _entryMaterial: {fileID: 2100000, guid: 3d1551023d939e54381cac51adcea917, type: 2}
+  _passageMaterial: {fileID: 2100000, guid: ab354b1039a8d0e479a4bbd1f828dce2, type: 2}
+  _barrierMaterial: {fileID: 2100000, guid: c76b8eaf4a6953049a886be74c818b69, type: 2}

@@ -1,0 +1,163 @@
+#pragma kernel CompositeAll
+#pragma kernel CompositeRegion
+
+// Output
+RWTexture2D<float4> _Output;
+int2 _OutputSize;
+
+// Region (for partial updates)
+int4 _Region; // xMin, yMin, xMax, yMax
+
+// Layer textures (up to 8)
+Texture2D<float4> _Layer0;
+Texture2D<float4> _Layer1;
+Texture2D<float4> _Layer2;
+Texture2D<float4> _Layer3;
+Texture2D<float4> _Layer4;
+Texture2D<float4> _Layer5;
+Texture2D<float4> _Layer6;
+Texture2D<float4> _Layer7;
+
+SamplerState sampler_Layer0;
+
+// Layer settings: x = opacity, y = blend mode, z = active (0/1), w = unused
+float4 _LayerSettings[8];
+int _LayerCount;
+
+// Blend modes (must match TerrainTintData.BlendMode enum)
+#define BLEND_MULTIPLY 0
+#define BLEND_SCREEN 1
+#define BLEND_OVERLAY 2
+#define BLEND_SOFTLIGHT 3
+#define BLEND_NORMAL 4
+
+float3 BlendMultiply(float3 base, float3 layer)
+{
+    return base * layer;
+}
+
+float3 BlendScreen(float3 base, float3 layer)
+{
+    return 1.0 - (1.0 - base) * (1.0 - layer);
+}
+
+float BlendOverlayChannel(float b, float l)
+{
+    return b < 0.5 ? (2.0 * b * l) : (1.0 - 2.0 * (1.0 - b) * (1.0 - l));
+}
+
+float3 BlendOverlay(float3 base, float3 layer)
+{
+    return float3(
+        BlendOverlayChannel(base.r, layer.r),
+        BlendOverlayChannel(base.g, layer.g),
+        BlendOverlayChannel(base.b, layer.b));
+}
+
+float BlendSoftLightChannel(float b, float l)
+{
+    float d = b <= 0.25 ? ((16.0 * b - 12.0) * b + 4.0) * b : sqrt(b);
+    return l < 0.5 ? b - (1.0 - 2.0 * l) * b * (1.0 - b) : b + (2.0 * l - 1.0) * (d - b);
+}
+
+float3 BlendSoftLight(float3 base, float3 layer)
+{
+    return float3(
+        BlendSoftLightChannel(base.r, layer.r),
+        BlendSoftLightChannel(base.g, layer.g),
+        BlendSoftLightChannel(base.b, layer.b));
+}
+
+float3 ApplyBlend(float3 base, float3 layer, int mode)
+{
+    switch (mode)
+    {
+        case BLEND_MULTIPLY:    return BlendMultiply(base, layer);
+        case BLEND_SCREEN:      return BlendScreen(base, layer);
+        case BLEND_OVERLAY:     return BlendOverlay(base, layer);
+        case BLEND_SOFTLIGHT:   return BlendSoftLight(base, layer);
+        case BLEND_NORMAL:      return layer; // Direct replacement
+        default:                return BlendMultiply(base, layer);
+    }
+}
+
+float4 SampleLayer(int index, float2 uv)
+{
+    switch (index)
+    {
+        case 0: return _Layer0.SampleLevel(sampler_Layer0, uv, 0);
+        case 1: return _Layer1.SampleLevel(sampler_Layer0, uv, 0);
+        case 2: return _Layer2.SampleLevel(sampler_Layer0, uv, 0);
+        case 3: return _Layer3.SampleLevel(sampler_Layer0, uv, 0);
+        case 4: return _Layer4.SampleLevel(sampler_Layer0, uv, 0);
+        case 5: return _Layer5.SampleLevel(sampler_Layer0, uv, 0);
+        case 6: return _Layer6.SampleLevel(sampler_Layer0, uv, 0);
+        case 7: return _Layer7.SampleLevel(sampler_Layer0, uv, 0);
+        default: return float4(1, 1, 1, 1);
+    }
+}
+
+bool IsWhite(float3 c)
+{
+    return c.r >= 0.999 && c.g >= 0.999 && c.b >= 0.999;
+}
+
+float3 CompositeAtPixel(int2 pixel)
+{
+    float2 uv = float2(pixel) / float2(_OutputSize - 1);
+    
+    // Start with white (no tint)
+    float3 result = float3(1, 1, 1);
+    
+    // Composite each active layer
+    for (int i = 0; i < _LayerCount; i++)
+    {
+        float4 settings = _LayerSettings[i];
+        float opacity = settings.x;
+        int blendMode = (int)settings.y;
+        bool active = settings.z > 0.5;
+        
+        if (!active || opacity <= 0.0)
+            continue;
+        
+        float4 layerSample = SampleLayer(i, uv);
+        float3 layerColor = layerSample.rgb;
+        
+        // Skip white pixels (no tint)
+        if (IsWhite(layerColor))
+            continue;
+        
+        // Apply opacity
+        layerColor = lerp(float3(1, 1, 1), layerColor, opacity);
+        
+        // Apply blend mode (default multiply for tinting)
+        result = ApplyBlend(result, layerColor, blendMode);
+    }
+    
+    return saturate(result);
+}
+
+[numthreads(8, 8, 1)]
+void CompositeAll(uint3 id : SV_DispatchThreadID)
+{
+    if ((int)id.x >= _OutputSize.x || (int)id.y >= _OutputSize.y)
+        return;
+    
+    float3 result = CompositeAtPixel(int2(id.xy));
+    _Output[id.xy] = float4(result, 1.0);
+}
+
+[numthreads(8, 8, 1)]
+void CompositeRegion(uint3 id : SV_DispatchThreadID)
+{
+    int2 pixel = int2(_Region.x + id.x, _Region.y + id.y);
+    
+    if (pixel.x > _Region.z || pixel.y > _Region.w)
+        return;
+    
+    if (pixel.x >= _OutputSize.x || pixel.y >= _OutputSize.y)
+        return;
+    
+    float3 result = CompositeAtPixel(pixel);
+    _Output[pixel] = float4(result, 1.0);
+}
