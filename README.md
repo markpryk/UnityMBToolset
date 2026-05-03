@@ -37,7 +37,7 @@ Bridging the visual and technical gap between the engines.
 
 ## Installation & Setup
 
-For detailed installation instructions, including required Unity packages and initial configuration, please refer to the [Installation Guide](Documentation/InstallationGuide.md).
+For detailed installation instructions, including required Unity packages and initial configuration, please refer to the [Installation Guide](RepoDoc/InstallationGuide.md).
 
 ## Workflow Overview
 
@@ -50,7 +50,7 @@ The MBToolset dropdown menu is organized as follows:
 ## Compatibility
 
 - Designed for **Mount & Blade: Warband** modules.
-- Built for **Unity 2021.3+**. 
+- Built for **Unity 6.4**. 
 - Designed as an **Editor-only** toolset.
 
 ## Credits

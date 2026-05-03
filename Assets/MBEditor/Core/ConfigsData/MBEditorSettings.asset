@@ -12,5 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60ad2b8630b2c324ea77a81eca893ce1, type: 3}
   m_Name: MBEditorSettings
   m_EditorClassIdentifier: 
-  _mbPath: K:/Games/SteamLibrary/steamapps/common/MountBlade Warband
+  _mbPath: 
   _currentModule: {fileID: 0}
