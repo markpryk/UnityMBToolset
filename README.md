@@ -4,6 +4,10 @@
 
 MBToolset is a comprehensive editor toolkit designed to bridge the gap between Mount & Blade: Warband modding and the Unity game engine. It allows modders and developers to seamlessly import, manage, and synchronize M&B module data, scenes, and assets directly within a modern Unity environment.
 
+## Showcase
+
+[![Showcase](https://img.youtube.com/vi/PMlnxQw9TcU/maxresdefault.jpg)](https://youtu.be/PMlnxQw9TcU)
+
 ## Features
 
 ### Automated Module Import Pipeline
