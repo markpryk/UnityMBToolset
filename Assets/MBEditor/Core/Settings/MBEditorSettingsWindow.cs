@@ -33,7 +33,7 @@ public class MBEditorSettingsWindow : EditorWindow
         UIHelpers.DrawUILine(UIColors.GrayLine, 1, 4);
 
         EditorGUILayout.HelpBox(
-            $" MBToolset Version {"0.1.6"} {Environment.NewLine} M&B/M&B:Warband compatible.",
+            $" MBToolset Version {"0.2.6-beta"} {Environment.NewLine} M&B/M&B:Warband compatible.",
             MessageType.None);
         UIHelpers.DrawUILine(UIColors.GrayLine, 1, 4);
 
