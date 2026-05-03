@@ -74,7 +74,7 @@ public class MBEditorSettingsWindow : EditorWindow
         else
         {
             EditorGUILayout.HelpBox(
-                "Configure path above to enable Native data import.",
+                "Configure both paths above to enable Native data import.",
                 MessageType.Info);
         }
 
