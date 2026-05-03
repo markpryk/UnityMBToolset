@@ -36,9 +36,9 @@ namespace MountAndBlade.ModdingToolkit
             // Phase 3: Model Pipeline
             CreateModelData = 7,
             AssignMaterials = 8,
-            CreateTerrainPalette = 9,
-            CreateModels = 10,
-            CreatePrefabs = 11,
+            CreateModels = 9,
+            CreatePrefabs = 10,
+            CreateTerrainPalette = 11,
 
             Complete = 12
         }
@@ -214,16 +214,6 @@ namespace MountAndBlade.ModdingToolkit
                     Dependencies = new[] { ImportStep.CreateMaterials, ImportStep.CreateModelData }
                 },
 
-                [ImportStep.CreateTerrainPalette] = new StepInfo
-                {
-                    Name = "Create Terrain Palette",
-                    Description = "Generate and configure Unity terrain layers with proper UV scaling and materials",
-                    Phase = ImportPhase.ModelPipeline,
-                    CheckComplete = m => AssetDatabase.LoadAssetAtPath<MBTerrainPalette>(MBPathHelpers.ModTerrainPalette(m.ID)) != null,
-                    Execute = m => TerrainPaletteHelpers.CreateUniqueTerrainPalette(m),
-                    Dependencies = new[] { ImportStep.AssignMaterials, ImportStep.CreateScriptableObjects }
-                },
-
                 [ImportStep.CreateModels] = new StepInfo
                 {
                     Name = "Create Models",
@@ -235,7 +225,7 @@ namespace MountAndBlade.ModdingToolkit
                         EnsureContexts();
                         MBEditorUtility.CreateModelPrefabs(m,_moduleContext,_nativeContext);
                     },
-                    Dependencies = new[] { ImportStep.CreateTerrainPalette }
+                    Dependencies = new[] { ImportStep.AssignMaterials }
                 },
 
                 [ImportStep.CreatePrefabs] = new StepInfo
@@ -247,6 +237,16 @@ namespace MountAndBlade.ModdingToolkit
                         MBPathHelpers.ModPrefabsPath(m.ID),"*.prefab*"),
                     Execute = m => MBPrefabsGenerator.GeneratePrefabs(m),
                     Dependencies = new[] { ImportStep.CreateModels }
+                },
+
+                [ImportStep.CreateTerrainPalette] = new StepInfo
+                {
+                    Name = "Create Terrain Palette",
+                    Description = "Generate and configure Unity terrain layers with proper UV scaling and materials",
+                    Phase = ImportPhase.ModelPipeline,
+                    CheckComplete = m => AssetDatabase.LoadAssetAtPath<MBTerrainPalette>(MBPathHelpers.ModTerrainPalette(m.ID)) != null,
+                    Execute = m => TerrainPaletteHelpers.CreateUniqueTerrainPalette(m),
+                    Dependencies = new[] { ImportStep.CreateModelData, ImportStep.CreateScriptableObjects }
                 },
 
                 // COMPLETE
