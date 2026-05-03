@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using MountAndBlade.Flora;
 using UnityEditor;
@@ -27,7 +27,7 @@ namespace MountAndBlade.Flora
         private int _totalInstances;
         private int _totalVerts;
 
-        [MenuItem("MBToolset/Tools/Grass Chunk Baker")]
+       // [MenuItem("MBToolset/Tools/Grass Chunk Baker", false, 51)]
         public static void ShowWindow()
         {
             var window = GetWindow<GrassChunkBakerWindow>("Grass Chunk Baker");

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEditor;
 using UnityEngine;
 using BDT.GUI.Helpers;
@@ -11,7 +11,7 @@ public class MBEditorSettingsWindow : EditorWindow
     private bool _showWizard;
     private Vector2 _scrollPosition;
 
-    [MenuItem("MBToolset/Settings")]
+    [MenuItem("MBToolset/Settings", false, 1)]
     public static void ShowWindow()
     {
         GetWindow<MBEditorSettingsWindow>("MBToolset Settings");

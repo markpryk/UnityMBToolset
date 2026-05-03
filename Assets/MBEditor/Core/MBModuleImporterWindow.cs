@@ -20,7 +20,7 @@ public class ImportModuleWindow : EditorWindow
     private MBModule _wizardModule;
     private bool _showWizard;
 
-    [MenuItem("MBToolset/Module Importer")]
+    [MenuItem("MBToolset/Import Module", false, 2)]
     public static void ShowWindow()
     {
         GetWindow<ImportModuleWindow>("Module Importer");

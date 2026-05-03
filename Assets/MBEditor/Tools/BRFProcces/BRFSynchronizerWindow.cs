@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -85,7 +85,7 @@ namespace MountAndBlade.ModdingToolkit
 
         // MENU ITEM
 
-        [MenuItem("MBToolset/Sync/BRF Synchronizer")]
+        [MenuItem("MBToolset/Sync/BRF Synchronizer", false, 42)]
         public static void ShowWindow()
         {
             var window = GetWindow<BRFSynchronizerWindow>("BRF Synchronizer");

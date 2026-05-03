@@ -16,7 +16,7 @@ public class MBMainEditorWindow : EditorWindow
     private MBModuleImportWizard _importWizard;
     private MBTools _mbTools;
 
-    [MenuItem("MBToolset/MB Editor")]
+    [MenuItem("MBToolset/MB Editor", false, 3)]
     public static void ShowWindow()
     {
         GetWindow<MBMainEditorWindow>("MB Editor");

@@ -53,7 +53,7 @@ namespace MountAndBlade.ModdingToolkit
         // MENU ITEM
 
 
-        [MenuItem("MBToolset/Sync/Scene Synchronizer")]
+        [MenuItem("MBToolset/Sync/Scene Synchronizer", false, 41)]
         public static void ShowWindow()
         {
             var window = GetWindow<SceneSynchronizerWindow>("Scene Synchronizer");
