@@ -1,0 +1,23 @@
+{
+    "name": "MBToolset",
+    "rootNamespace": "MBToolset",
+    "references": [
+        "Unity.Mathematics",
+        "Unity.Burst",
+        "Unity.ProBuilder",
+        "Unity.ProBuilder.Editor",
+        "Unity.AI.Navigation",
+        "Unity.AI.Navigation.Editor"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
