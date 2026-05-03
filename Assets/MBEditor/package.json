@@ -15,7 +15,8 @@
     "terrain",
     "importer"
   ],
-  "documentationUrl": "https://github.com/markpryk/UnityMBToolset/blob/master/Assets/MBEditor/README.md",
+  "documentationUrl": "https://github.com/markpryk/UnityMBToolset/blob/main/README.md",
+  "changelogUrl": "https://github.com/markpryk/UnityMBToolset/blob/main/CHANGELOG.md",
   "unity": "2021.3",
   "dependencies": {
     "com.unity.nuget.newtonsoft-json": "3.2.2",
