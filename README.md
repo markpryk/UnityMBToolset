@@ -53,6 +53,10 @@ The MBToolset dropdown menu is organized as follows:
 - Built for **Unity 6.4**. 
 - Designed as an **Editor-only** toolset.
 
+## Community
+
+Join our Discord server: [https://discord.gg/WfVBJQqWDg](https://discord.gg/WfVBJQqWDg)
+
 ## Credits
 
 **Author**: markpryk
