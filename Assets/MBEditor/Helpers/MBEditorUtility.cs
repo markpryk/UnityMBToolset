@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -58,7 +58,7 @@ public static class MBEditorUtility
                 {
                     processed++;
 
-                    if (group.MeshEntries.Count == 0)
+                    if (group == null || string.IsNullOrEmpty(group.GroupID) || group.MeshEntries == null || group.MeshEntries.Count == 0)
                     {
                         skipped++;
                         continue;
@@ -81,16 +81,27 @@ public static class MBEditorUtility
                         continue;
                     }
 
-                    Material barrierOverride = IsDefaultBarrierProp(group.GroupID)
-                        ? ImporterProps.BuildData.BarrierMaterial
-                        : null;
+                    Material barrierOverride = null;
+                    if (IsDefaultBarrierProp(group.GroupID))
+                    {
+                        var buildData = ImporterProps.BuildData;
+                        barrierOverride = buildData != null ? buildData.BarrierMaterial : null;
+                    }
 
-                    var prefab = BuildModelPrefabFromGroup(
-                        module.ID, brfData, group, prefabPath,brfDataBase,
-                        moduleCtx, nativeCtx, barrierOverride);
+                    try
+                    {
+                        var prefab = BuildModelPrefabFromGroup(
+                            module.ID, brfData, group, prefabPath, brfDataBase,
+                            moduleCtx, nativeCtx, barrierOverride);
 
-                    if (prefab != null)
-                        created++;
+                        if (prefab != null)
+                            created++;
+                    }
+                    catch (System.Exception ex)
+                    {
+                        Debug.LogWarning($"Skipped model '{group.GroupID}' in {brfData.BrfName}: {ex.Message}");
+                        skipped++;
+                    }
                 }
             }
         }
@@ -129,7 +140,7 @@ public static class MBEditorUtility
 
         foreach (var meshEntry in group.MeshEntries)
         {
-            if (meshEntry.UnityMesh == null) continue;
+            if (meshEntry == null || meshEntry.UnityMesh == null) continue;
 
             Material material = materialOverride;
 
@@ -157,9 +168,10 @@ public static class MBEditorUtility
             mbModel.AddMesh(meshEntry.UnityMesh, material, meshEntry.MaterialName, meshEntry.Flags);
         }
 
+        if (group.LodMeshEntries != null)
         foreach (var lodEntry in group.LodMeshEntries)
         {
-            if (lodEntry.UnityMesh == null) continue;
+            if (lodEntry == null || lodEntry.UnityMesh == null) continue;
 
             Material material = materialOverride ?? mbModel.PrimaryMaterial;
 

@@ -9,9 +9,7 @@
         "Unity.AI.Navigation",
         "Unity.AI.Navigation.Editor"
     ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
