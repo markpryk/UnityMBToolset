@@ -56,6 +56,7 @@ The MBToolset dropdown menu is organized as follows:
 - Designed for **Mount & Blade: Warband** modules.
 - Built for **Unity 6.4**. 
 - Designed as an **Editor-only** toolset.
+- Windows Only. (planed Linux support in the future)
 
 ## Community
 
