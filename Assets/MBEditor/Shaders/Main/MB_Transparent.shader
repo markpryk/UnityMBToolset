@@ -30,8 +30,54 @@ Shader "M&B/M&B_Transparent"
     {
         Tags { "RenderType" = "Transparent" "Queue" = "Transparent" }
         LOD 200
+
+        Pass
+        {
+            ZWrite On
+            ColorMask 0
+            Cull Back
+
+            CGPROGRAM
+            #pragma vertex vert
+            #pragma fragment frag
+            #pragma multi_compile_instancing
+            #include "UnityCG.cginc"
+
+            sampler2D _MainTex;
+            float4 _MainTex_ST;
+
+            struct appdata
+            {
+                float4 vertex : POSITION;
+                float2 uv : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct v2f
+            {
+                float4 pos : SV_POSITION;
+                float2 uv : TEXCOORD0;
+            };
+
+            v2f vert(appdata v)
+            {
+                v2f o;
+                UNITY_SETUP_INSTANCE_ID(v);
+                o.pos = UnityObjectToClipPos(v.vertex);
+                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                return o;
+            }
+
+            void frag(v2f i)
+            {
+                fixed4 tex = tex2D(_MainTex, i.uv);
+                clip(tex.a - 0.01);
+            }
+            ENDCG
+        }
+
         Blend SrcAlpha OneMinusSrcAlpha
-        ZWrite [_ZWrite]
+        ZWrite Off
         Cull Back
 
         CGPROGRAM
